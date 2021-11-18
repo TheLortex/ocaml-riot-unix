@@ -1,0 +1,10 @@
+(executable
+ (name main)
+ (modes
+  (byte exe)))
+
+(rule
+ (target main.c)
+ (deps main.bc)
+ (action
+  (run ocamlclean -verbose %{deps} -o %{target})))
