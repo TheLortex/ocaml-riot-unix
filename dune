@@ -1,0 +1,46 @@
+(rule
+ (target libcamlrun.a)
+ (deps ocaml/runtime/libcamlrun.a)
+ (mode promote)
+ (action
+  (copy %{deps} %{target})))
+
+(subdir
+ ocaml
+ (rule
+  (targets Makefile.build_config Makefile.config m.h s.h)
+  (deps
+   (env_var CC)
+   (env_var CFLAGS)
+   (env_var CPPFLAGS)
+   (env_var LIBS)
+   (env_var AS)
+   (env_var ASPP)
+   (source_tree build-aux)
+   Makefile.build_config.in
+   Makefile.config.in
+   tools/eventlog_metadata.in
+   runtime/caml/m.h.in
+   runtime/caml/s.h.in)
+  (action
+   (progn
+    (run
+     ./configure
+     --host=x86_64-pc-linux-gnu
+     -disable-shared
+     -disable-systhreads
+     -disable-unix-lib
+     -disable-instrumented-runtime)
+    (run cp runtime/caml/m.h m.h)
+    (run cp runtime/caml/s.h s.h)
+    (run bash -c "echo '#undef HAS_SOCKETS' >> s.h")))))
+
+(subdir
+ ocaml/runtime/caml
+ (rule
+  (targets s.h m.h)
+  (deps ../../s.h ../../m.h)
+  (action
+   (progn
+    (copy ../../s.h s.h)
+    (copy ../../m.h m.h)))))

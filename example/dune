@@ -1,10 +1,18 @@
 (executable
  (name main)
+ (foreign_stubs (language c) (names stubs))
  (modes
-  (byte exe)))
+  (byte c)))
 
-(rule
- (target main.c)
- (deps main.bc)
- (action
-  (run ocamlclean -verbose %{deps} -o %{target})))
+;(rule
+; (target main.c)
+; (deps main.bc.c)
+; (action
+;  (run ocamlclean -verbose %{deps} -o %{target})))
+
+;(rule
+; (target main.c)
+; (deps main.bc.c)
+; (action
+;  (run cp %{deps} %{target})))
+;

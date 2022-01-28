@@ -15,48 +15,38 @@ DEVELHELP ?= 1
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 0
 
-all: main.c libcamlrun.a
+all: main.c runtime
 
-
-
-main.c:
+main.c: example/main.ml example/dune example/dune-project
 	cd example && dune build
-	cp example/_build/default/main.c .
-
-CFLAGS += -I$(CURDIR)/ocaml/runtime/
-
-LINKFLAGS += -L$(CURDIR)/ocaml/_build/default/runtime/ -lcamlrun
+	rm -f main.c
+	cp _build/default/example/main.c .
 
 include $(RIOTBASE)/Makefile.include
-
-
+#
 ocaml/Makefile:
 	sed -i -e 's/oc_cflags="/oc_cflags="$$OC_CFLAGS /g' ocaml/configure
 	sed -i -e 's/ocamlc_cflags="/ocamlc_cflags="$$OCAMLC_CFLAGS /g' ocaml/configure
-
+#
 CFLAGS := $(subst \",",$(CFLAGS))
 CFLAGS := $(subst ',,$(CFLAGS))
 CFLAGS := $(subst -Wstrict-prototypes,,$(CFLAGS))
 CFLAGS := $(subst -Werror,,$(CFLAGS))
 CFLAGS := $(subst -Wold-style-definition,,$(CFLAGS))
-CFLAGS := $(subst -fdiagnostics-color,,$(CFLAGS))
-ocaml/Makefile.config: ocaml/Makefile
-	cd ocaml && \
-		CC="$(CC)" \
-		CFLAGS="" \
-		AS="$(AS)" \
-		ASPP="$(CC) $(CFLAGS) -c" \
-		CPPFLAGS="$(CFLAGS)" \
-	  ./configure \
-		-disable-shared\
-		-disable-systhreads\
-		-disable-unix-lib\
-		-disable-instrumented-runtime
-	echo '#undef HAS_SOCKETS' >> ocaml/runtime/caml/s.h
-	echo '#undef OCAML_OS_TYPE' >> ocaml/runtime/caml/s.h
-	echo '#define OCAML_OS_TYPE "None"' >> ocaml/runtime/caml/s.h
+#CFLAGS := $(subst -fdiagnostics-color,,$(CFLAGS))
+#
+OCAML_CFLAGS := $(CFLAGS)
+OCAML_LIBS := $(LINKFLAGS)
+RIOTBUILD_H_FILE := $(absolute bin/native/riotbuild/riotbuild.h)
+.PHONY: runtime
+runtime: $(RIOTBUILD_H_FILE)
+	CC="$(CC)" \
+	CFLAGS="" \
+	AS="$(AS)" \
+	ASPP="$(CC) $(OCAML_CFLAGS) -c" \
+	CPPFLAGS="$(OCAML_CFLAGS)" \
+	LIBS="$(OCAML_LIBS) --entry main" \
+	dune build include/ libcamlrun.a --verbose
 
-ocaml/runtime/libcamlrun.a: ocaml/Makefile.config
-	cd ocaml/ && dune build runtime/libcamlrun.a
-
-libcamlrun.a: ocaml/runtime/libcamlrun.a
+CFLAGS += -I$(CURDIR)/include/
+LINKFLAGS += -L$(CURDIR) -lcamlrun -lm
