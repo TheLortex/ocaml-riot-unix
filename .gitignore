@@ -1,4 +1,4 @@
 _build
 libcamlrun.a
-main.c
+/main.c
 bin/

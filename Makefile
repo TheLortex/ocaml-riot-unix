@@ -20,7 +20,7 @@ all: main.c runtime
 main.c: example/main.ml example/dune example/dune-project
 	cd example && dune build
 	rm -f main.c
-	cp _build/default/example/main.c .
+	cp _build/default/example/main.bc.c ./main.c
 
 include $(RIOTBASE)/Makefile.include
 #
